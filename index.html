@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Image Gallery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fafafa;
+            padding: 20px;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-top: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: #222;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            color: #777;
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+        
+        /* Gallery Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+        
+        /* Gallery Item */
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background-color: #fff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 280px;
+            cursor: pointer;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* Image */
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: all 0.5s ease;
+        }
+        
+        /* ZOOM EFFECT CLASSES */
+        .zoom-effect .gallery-img {
+            transform: scale(1);
+        }
+        
+        .zoom-effect:hover .gallery-img {
+            transform: scale(1.1);
+        }
+        
+        /* FADE EFFECT CLASSES */
+        .fade-effect .gallery-img {
+            opacity: 1;
+        }
+        
+        .fade-effect:hover .gallery-img {
+            opacity: 0.7;
+        }
+        
+        /* SLIDE EFFECT CLASSES */
+        .slide-effect .gallery-img {
+            transform: scale(1);
+        }
+        
+        .slide-effect:hover .gallery-img {
+            transform: scale(1.05) translateX(10px);
+        }
+        
+        /* ROTATE EFFECT CLASSES */
+        .rotate-effect .gallery-img {
+            transform: scale(1) rotate(0deg);
+        }
+        
+        .rotate-effect:hover .gallery-img {
+            transform: scale(1.1) rotate(3deg);
+        }
+        
+        /* Caption */
+        .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            color: white;
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.4s ease;
+        }
+        
+        .gallery-item:hover .caption {
+            transform: translateY(0);
+        }
+        
+        .caption-title {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .caption-text {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover, .control-btn.active {
+            background-color: #222;
+            color: white;
+            border-color: #222;
+        }
+        
+        /* Lightbox Modal */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .lightbox-caption {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .close-lightbox {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            background: none;
+            border: none;
+        }
+        
+        .close-lightbox:hover {
+            color: #ff6b6b;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 40px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            
+            .gallery-item {
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .gallery {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .gallery-item {
+                height: 300px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 200px;
+            }
+        }
+        
+        /* Animation for page load */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .gallery-item {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        .gallery-item:nth-child(1) { animation-delay: 0.1s; }
+        .gallery-item:nth-child(2) { animation-delay: 0.2s; }
+        .gallery-item:nth-child(3) { animation-delay: 0.3s; }
+        .gallery-item:nth-child(4) { animation-delay: 0.4s; }
+        .gallery-item:nth-child(5) { animation-delay: 0.5s; }
+        .gallery-item:nth-child(6) { animation-delay: 0.6s; }
+        .gallery-item:nth-child(7) { animation-delay: 0.7s; }
+        .gallery-item:nth-child(8) { animation-delay: 0.8s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interactive Image Gallery</h1>
+            <p class="subtitle">Click images to view large | Use buttons to change hover effects</p>
+        </header>
+        
+        <div class="controls">
+            <button class="control-btn active" data-effect="zoom-effect">Zoom Effect</button>
+            <button class="control-btn" data-effect="fade-effect">Fade Effect</button>
+            <button class="control-btn" data-effect="slide-effect">Slide Effect</button>
+            <button class="control-btn" data-effect="rotate-effect">Rotate Effect</button>
+        </div>
+        
+        <div class="gallery">
+            <!-- Image 1 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Mountain Landscape" data-description="Beautiful sunrise over snowy peaks">
+                <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Mountain Landscape" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Mountain Landscape</div>
+                    <div class="caption-text">Beautiful sunrise over snowy peaks</div>
+                </div>
+            </div>
+            
+            <!-- Image 2 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Beach Sunset" data-description="Golden hour at a peaceful beach">
+                <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Beach Sunset" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Beach Sunset</div>
+                    <div class="caption-text">Golden hour at a peaceful beach</div>
+                </div>
+            </div>
+            
+            <!-- Image 3 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Forest Path" data-description="Sunlight filtering through dense trees">
+                <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Forest Path" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Forest Path</div>
+                    <div class="caption-text">Sunlight filtering through dense trees</div>
+                </div>
+            </div>
+            
+            <!-- Image 4 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Northern Lights" data-description="Aurora borealis in the night sky">
+                <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Northern Lights" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Northern Lights</div>
+                    <div class="caption-text">Aurora borealis in the night sky</div>
+                </div>
+            </div>
+            
+            <!-- Image 5 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Misty Mountains" data-description="Early morning fog covering the hills">
+                <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Misty Mountains" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Misty Mountains</div>
+                    <div class="caption-text">Early morning fog covering the hills</div>
+                </div>
+            </div>
+            
+            <!-- Image 6 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Lake Reflection" data-description="Perfect mirror image on calm water">
+                <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Lake Reflection" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Lake Reflection</div>
+                    <div class="caption-text">Perfect mirror image on calm water</div>
+                </div>
+            </div>
+            
+            <!-- Image 7 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Desert Dunes" data-description="Golden sand patterns in the desert">
+                <img src="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Desert Dunes" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Desert Dunes</div>
+                    <div class="caption-text">Golden sand patterns in the desert</div>
+                </div>
+            </div>
+            
+            <!-- Image 8 -->
+            <div class="gallery-item zoom-effect" data-image="https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" data-title="Waterfall" data-description="Powerful cascade in a tropical forest">
+                <img src="https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Waterfall" class="gallery-img">
+                <div class="caption">
+                    <div class="caption-title">Waterfall</div>
+                    <div class="caption-text">Powerful cascade in a tropical forest</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lightbox Modal -->
+        <div class="lightbox" id="lightbox">
+            <button class="close-lightbox">&times;</button>
+            <img class="lightbox-content" id="lightbox-img" src="" alt="">
+            <div class="lightbox-caption" id="lightbox-caption">
+                <h3 id="lightbox-title"></h3>
+                <p id="lightbox-description"></p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Interactive Image Gallery &copy; 2023 | Click images to view | Use buttons to change hover effects</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">Currently Active Effect: <span id="current-effect">Zoom Effect</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Current active effect
+        let currentEffect = 'zoom-effect';
+        
+        // Lightbox functionality
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxDescription = document.getElementById('lightbox-description');
+        const closeLightbox = document.querySelector('.close-lightbox');
+        
+        // Open lightbox when clicking on gallery items
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const imgUrl = this.getAttribute('data-image');
+                const title = this.getAttribute('data-title');
+                const description = this.getAttribute('data-description');
+                
+                lightboxImg.src = imgUrl;
+                lightboxTitle.textContent = title;
+                lightboxDescription.textContent = description;
+                lightbox.style.display = 'flex';
+                
+                // Prevent body scroll when lightbox is open
+                document.body.style.overflow = 'hidden';
+            });
+        });
+        
+        // Close lightbox
+        closeLightbox.addEventListener('click', function() {
+            lightbox.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Close lightbox when clicking outside the image
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox) {
+                lightbox.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.style.display === 'flex') {
+                lightbox.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Effect controls functionality
+        document.querySelectorAll('.control-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.control-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Get the effect from data attribute
+                const effect = this.getAttribute('data-effect');
+                currentEffect = effect;
+                
+                // Update current effect display
+                document.getElementById('current-effect').textContent = 
+                    this.textContent;
+                
+                // Apply the effect to all gallery items
+                const galleryItems = document.querySelectorAll('.gallery-item');
+                
+                galleryItems.forEach(item => {
+                    // Remove all effect classes
+                    item.classList.remove('zoom-effect', 'fade-effect', 'slide-effect', 'rotate-effect');
+                    
+                    // Add the new effect class
+                    item.classList.add(effect);
+                });
+            });
+        });
+        
+        // Initialize with zoom effect
+        document.querySelector('[data-effect="zoom-effect"]').classList.add('active');
+    </script>
+</body>
+</html>
